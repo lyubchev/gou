@@ -6,7 +6,9 @@ import (
 	"image/color"
 	"os"
 	"strconv"
+	"time"
 
+	"github.com/JamesHovious/w32"
 	"github.com/kbinani/screenshot"
 )
 
@@ -50,20 +52,45 @@ func main() {
 		panic(err)
 	}
 
-	width := bounds.Max.X
-	height := bounds.Max.Y
+	screenshotBounds := img.Bounds()
+	width := screenshotBounds.Max.X
+	height := screenshotBounds.Max.Y
 
 	// BLM
-	pouColor := color.Black
+	var pouColor color.Color = color.Transparent
+	setColor := true
 
-	for x := bounds.Min.X; x < width; x++ {
-		for y := bounds.Min.Y; y < height; y++ {
-			color := img.At(x, y)
+	for x := screenshotBounds.Min.X; x < width; x++ {
+		for y := screenshotBounds.Min.Y; y < height; y++ {
+			pix := img.At(x, y)
 
 			for _, c := range colors {
-				if c == color && pouColor != color.Black {
-					pouColor = color
+				if setColor && c == pix {
+					pouColor = pix
+					setColor = false
+				}
 
+				if c != pouColor && pix == c {
+
+					down := w32.INPUT{
+						Type: 0,
+						Mi: w32.MOUSEINPUT{
+							DwFlags: w32.MOUSEEVENTF_LEFTDOWN,
+							Dx:      int32(screenshot.GetDisplayBounds(0).Max.X - x),
+							Dy:      int32(screenshot.GetDisplayBounds(0).Max.Y - y),
+						},
+					}
+
+					up := w32.INPUT{
+						Type: 0,
+						Mi: w32.MOUSEINPUT{
+							DwFlags: w32.MOUSEEVENTF_LEFTUP,
+						},
+					}
+
+					w32.SendInput([]w32.INPUT{down})
+					time.Sleep(25)
+					w32.SendInput([]w32.INPUT{up})
 					break
 				}
 			}
@@ -71,5 +98,4 @@ func main() {
 	}
 
 	fmt.Println(bounds)
-	// fmt.Println(img)
 }
