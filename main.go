@@ -3,24 +3,25 @@ package main
 import (
 	"fmt"
 	"image"
-	"image/png"
+	"image/color"
 	"os"
 	"strconv"
 
 	"github.com/kbinani/screenshot"
 )
 
-// Colors
-const (
-	Blue   = "#63c7ff"
-	Yellow = "#f7ef39"
-	Purple = "#bd75ff"
-	Orange = "#ff8221"
-	Green  = "#42f331"
-	Pink   = "#ff82b5"
-	Gray   = "#8c8a8c"
-	White  = "#ffffff"
-)
+// Pou Colors
+
+var colors = []color.Color{
+	color.RGBA{99, 199, 255, 255},
+	color.RGBA{247, 239, 57, 255},
+	color.RGBA{189, 117, 255, 255},
+	color.RGBA{255, 130, 33, 255},
+	color.RGBA{66, 243, 49, 255},
+	color.RGBA{255, 130, 181, 255},
+	color.RGBA{140, 138, 140, 255},
+	color.RGBA{255, 255, 255, 255},
+}
 
 func main() {
 	x0, err := strconv.Atoi(os.Args[1])
@@ -43,23 +44,21 @@ func main() {
 	x1 := w + x0
 	y1 := h + y0
 
-	// bounds := screenshot.GetDisplayBounds(0)
 	bounds := image.Rect(x0, y0, x1, y1)
-
 	img, err := screenshot.CaptureRect(bounds)
 	if err != nil {
 		panic(err)
 	}
 
-	file, err := os.Create("pesho.png")
-	if err != nil {
-		panic(err)
+	width := bounds.Max.X
+	height := bounds.Max.Y
+
+	for x := bounds.Min.X; x < width; x++ {
+		for y := bounds.Min.Y; y < height; y++ {
+			r, g, b, _ := img.At(x, y).RGBA()
+
+		}
 	}
-
-	defer file.Close()
-	png.Encode(file, img)
-
-	fmt.Printf("#%d : %v \"%s\"\n", 0, bounds, "pesho.png")
 
 	fmt.Println(bounds)
 	// fmt.Println(img)
