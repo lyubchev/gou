@@ -53,10 +53,20 @@ func main() {
 	width := bounds.Max.X
 	height := bounds.Max.Y
 
+	// BLM
+	pouColor := color.Black
+
 	for x := bounds.Min.X; x < width; x++ {
 		for y := bounds.Min.Y; y < height; y++ {
-			r, g, b, _ := img.At(x, y).RGBA()
+			color := img.At(x, y)
 
+			for _, c := range colors {
+				if c == color && pouColor != color.Black {
+					pouColor = color
+
+					break
+				}
+			}
 		}
 	}
 
