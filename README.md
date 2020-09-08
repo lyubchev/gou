@@ -1,2 +1,2 @@
 # gou
-🤖 A bot to play the Color Tap Pou minigame
+🤖 A bot to play the Color Tap Pou minigame!
