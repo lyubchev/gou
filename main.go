@@ -72,7 +72,7 @@ func main() {
 
 				if c != pouColor && pix == c {
 
-					w32.SetCursorPos(x+w, y+h)
+					w32.SetCursorPos(x0+x, y0+y)
 
 					down := w32.INPUT{
 						Type: 0,
