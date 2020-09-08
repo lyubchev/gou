@@ -72,12 +72,12 @@ func main() {
 
 				if c != pouColor && pix == c {
 
+					w32.SetCursorPos(x+w, y+h)
+
 					down := w32.INPUT{
 						Type: 0,
 						Mi: w32.MOUSEINPUT{
 							DwFlags: w32.MOUSEEVENTF_LEFTDOWN,
-							Dx:      int32(screenshot.GetDisplayBounds(0).Max.X - x),
-							Dy:      int32(screenshot.GetDisplayBounds(0).Max.Y - y),
 						},
 					}
 
@@ -89,7 +89,7 @@ func main() {
 					}
 
 					w32.SendInput([]w32.INPUT{down})
-					time.Sleep(25)
+					time.Sleep(1)
 					w32.SendInput([]w32.INPUT{up})
 					break
 				}
