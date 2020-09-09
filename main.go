@@ -57,6 +57,11 @@ func main() {
 		panic(err)
 	}
 
+	levelsToPass, err := strconv.Atoi(os.Args[5])
+	if err != nil {
+		panic(err)
+	}
+
 	x1 := w + x0
 	y1 := h + y0
 
@@ -70,7 +75,6 @@ func main() {
 	width := screenshotBounds.Max.X
 	height := screenshotBounds.Max.Y
 
-	levelsToPass := 10000
 	for i := 1; i <= levelsToPass; i++ {
 
 		start := time.Now()
@@ -97,7 +101,7 @@ func main() {
 				}
 
 				if !setColor && pouColor == pix {
-					MoveClick(x0+x, y0+y, time.Millisecond*80)
+					MoveClick(x0+x, y0+y, time.Millisecond*60)
 
 					img, err = screenshot.CaptureRect(bounds)
 					if err != nil {
