@@ -25,6 +25,20 @@ var colors = []color.Color{
 	color.RGBA{255, 255, 255, 255},
 }
 
+var down = w32.INPUT{
+	Type: 0,
+	Mi: w32.MOUSEINPUT{
+		DwFlags: w32.MOUSEEVENTF_LEFTDOWN,
+	},
+}
+
+var up = w32.INPUT{
+	Type: 0,
+	Mi: w32.MOUSEINPUT{
+		DwFlags: w32.MOUSEEVENTF_LEFTUP,
+	},
+}
+
 func main() {
 	x0, err := strconv.Atoi(os.Args[1])
 	if err != nil {
@@ -57,53 +71,63 @@ func main() {
 	height := screenshotBounds.Max.Y
 
 	// BLM
-	var pouColor color.Color = color.Transparent
-	setColor := true
 
-	for x := screenshotBounds.Min.X; x < width; x++ {
+	for i := 0; i < 1; i++ {
+		var pouColor color.Color = color.Transparent
+		setColor := true
+
 		for y := screenshotBounds.Min.Y; y < height; y++ {
-			pix := img.At(x, y)
+			for x := screenshotBounds.Min.X; x < width; x++ {
 
-			for _, c := range colors {
-				if setColor && c == pix {
-					pouColor = pix
-					setColor = false
+				pix := img.At(x, y)
+
+				for _, c := range colors {
+					if !setColor {
+						break
+					}
+
+					if c == pix {
+						pouColor = c
+						setColor = false
+					}
 				}
 
-				if pix != pouColor && pix == c {
-
-					w32.SetCursorPos(x0+x, y0+y)
-
-					down := w32.INPUT{
-						Type: 0,
-						Mi: w32.MOUSEINPUT{
-							DwFlags: w32.MOUSEEVENTF_LEFTDOWN,
-						},
-					}
-
-					up := w32.INPUT{
-						Type: 0,
-						Mi: w32.MOUSEINPUT{
-							DwFlags: w32.MOUSEEVENTF_LEFTUP,
-						},
-					}
-
-					time.Sleep(time.Millisecond * 15)
-					w32.SendInput([]w32.INPUT{down})
-					time.Sleep(time.Millisecond * 15)
-					w32.SendInput([]w32.INPUT{up})
-					time.Sleep(time.Millisecond * 30)
+				if !setColor && pouColor == pix {
+					MoveClick(x0+x, y0+y)
 
 					img, err = screenshot.CaptureRect(bounds)
 					if err != nil {
 						panic(err)
 					}
-					break
-				}
-			}
+					// x = screenshotBounds.Min.X
+					// y = screenshotBounds.Min.Y
 
+				}
+
+				// if pix != pouColor && c == pix {
+
+				// break
+				// }
+
+			}
 		}
 	}
 
 	fmt.Println(bounds)
+}
+
+func MoveClick(x, y int) {
+	w32.SetCursorPos(x, y)
+
+	err := w32.SendInput([]w32.INPUT{down})
+	if err != nil {
+		panic(err)
+	}
+
+	time.Sleep(time.Second)
+
+	err = w32.SendInput([]w32.INPUT{up})
+	if err != nil {
+		panic(err)
+	}
 }
