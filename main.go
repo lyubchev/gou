@@ -5,7 +5,6 @@ import (
 	"image"
 	"image/color"
 	"os"
-	"os/exec"
 	"strconv"
 	"time"
 
@@ -71,21 +70,18 @@ func main() {
 	width := screenshotBounds.Max.X
 	height := screenshotBounds.Max.Y
 
-	// BLM
-
-	levelsToPass := 1000
+	levelsToPass := 10000
 	for i := 1; i <= levelsToPass; i++ {
-		cmd := exec.Command("cmd", "/c", "cls")
-		cmd.Stdout = os.Stdout
-		cmd.Run()
+
+		start := time.Now()
 
 		fmt.Printf("Playing level %d/%d!\n", i, levelsToPass)
 
 		var pouColor color.Color = color.Transparent
 		setColor := true
 
-		for y := screenshotBounds.Min.Y; y < height; y += 15 {
-			for x := screenshotBounds.Min.X; x < width; x += 15 {
+		for y := screenshotBounds.Min.Y; y < height; y += 10 {
+			for x := screenshotBounds.Min.X; x < width; x += 10 {
 
 				pix := img.At(x, y)
 
@@ -101,26 +97,19 @@ func main() {
 				}
 
 				if !setColor && pouColor == pix {
-					MoveClick(x0+x, y0+y, time.Millisecond*60)
+					MoveClick(x0+x, y0+y, time.Millisecond*80)
 
 					img, err = screenshot.CaptureRect(bounds)
 					if err != nil {
 						panic(err)
 					}
-					// x = screenshotBounds.Min.X
-					// y = screenshotBounds.Min.Y
-
 				}
-
-				// if pix != pouColor && c == pix {
-
-				// break
-				// }
-
 			}
 		}
 
-		fmt.Printf("Level %d passed!\n", i)
+		elapsed := time.Since(start)
+		fmt.Println()
+		fmt.Printf("Level %d passed in %s!\n", i, elapsed)
 	}
 
 	fmt.Println(bounds)
