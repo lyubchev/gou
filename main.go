@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"os/exec"
 	"strconv"
 	"time"
 
@@ -22,7 +23,7 @@ var colors = []color.Color{
 	color.RGBA{66, 243, 49, 255},
 	color.RGBA{255, 130, 181, 255},
 	color.RGBA{140, 138, 140, 255},
-	color.RGBA{255, 255, 255, 255},
+	// color.RGBA{255, 255, 255, 255},
 }
 
 var down = w32.INPUT{
@@ -72,12 +73,19 @@ func main() {
 
 	// BLM
 
-	for i := 0; i < 1; i++ {
+	levelsToPass := 1000
+	for i := 1; i <= levelsToPass; i++ {
+		cmd := exec.Command("cmd", "/c", "cls")
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+
+		fmt.Printf("Playing level %d/%d!\n", i, levelsToPass)
+
 		var pouColor color.Color = color.Transparent
 		setColor := true
 
-		for y := screenshotBounds.Min.Y; y < height; y++ {
-			for x := screenshotBounds.Min.X; x < width; x++ {
+		for y := screenshotBounds.Min.Y; y < height; y += 15 {
+			for x := screenshotBounds.Min.X; x < width; x += 15 {
 
 				pix := img.At(x, y)
 
@@ -93,7 +101,7 @@ func main() {
 				}
 
 				if !setColor && pouColor == pix {
-					MoveClick(x0+x, y0+y)
+					MoveClick(x0+x, y0+y, time.Millisecond*60)
 
 					img, err = screenshot.CaptureRect(bounds)
 					if err != nil {
@@ -111,12 +119,14 @@ func main() {
 
 			}
 		}
+
+		fmt.Printf("Level %d passed!\n", i)
 	}
 
 	fmt.Println(bounds)
 }
 
-func MoveClick(x, y int) {
+func MoveClick(x, y int, delay time.Duration) {
 	w32.SetCursorPos(x, y)
 
 	err := w32.SendInput([]w32.INPUT{down})
@@ -124,7 +134,7 @@ func MoveClick(x, y int) {
 		panic(err)
 	}
 
-	time.Sleep(time.Second)
+	time.Sleep(delay)
 
 	err = w32.SendInput([]w32.INPUT{up})
 	if err != nil {
