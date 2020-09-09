@@ -70,7 +70,7 @@ func main() {
 					setColor = false
 				}
 
-				if c != pouColor && pix == c {
+				if pix != pouColor && pix == c {
 
 					w32.SetCursorPos(x0+x, y0+y)
 
@@ -88,12 +88,20 @@ func main() {
 						},
 					}
 
+					time.Sleep(time.Millisecond * 15)
 					w32.SendInput([]w32.INPUT{down})
-					time.Sleep(1)
+					time.Sleep(time.Millisecond * 15)
 					w32.SendInput([]w32.INPUT{up})
+					time.Sleep(time.Millisecond * 30)
+
+					img, err = screenshot.CaptureRect(bounds)
+					if err != nil {
+						panic(err)
+					}
 					break
 				}
 			}
+
 		}
 	}
 
