@@ -10,6 +10,9 @@ import (
 
 	"github.com/JamesHovious/w32"
 	"github.com/kbinani/screenshot"
+	"github.com/moutend/go-hook/pkg/keyboard"
+	"github.com/moutend/go-hook/pkg/types"
+	hook "github.com/robotn/gohook"
 )
 
 // Pou Colors
@@ -40,30 +43,40 @@ var up = w32.INPUT{
 }
 
 func main() {
-	x0, err := strconv.Atoi(os.Args[1])
-	if err != nil {
-		panic(err)
-	}
-	y0, err := strconv.Atoi(os.Args[2])
-	if err != nil {
-		panic(err)
-	}
-	w, err := strconv.Atoi(os.Args[3])
-	if err != nil {
-		panic(err)
-	}
-	h, err := strconv.Atoi(os.Args[4])
-	if err != nil {
-		panic(err)
+	evC := RegKbHook()
+	var x0, y0, x1, y1 int
+
+	for ev := range evC {
+		fmt.Println("--- Move your mouse cursor to the TOP LEFT corner of the game playground then press '1' to set TOP LEFT cords!")
+		if ev.Kind == hook.KeyDown && ev.Keychar == '1' {
+			x0, y0, ok := w32.GetCursorPos()
+			if !ok {
+				panic("Could not get Cursor Pos with win32!")
+			}
+
+			fmt.Printf("Setting x0,y0 to %+d,%+d", x0, y0)
+		}
+
+		fmt.Println("--- Move your mouse cursor to the BOTTOM RIGHT corner of the game playground then press '2' to set BOTTOM RIGHT cords!")
+		if ev.Kind == hook.KeyDown && ev.Keychar == '2' {
+			x1, y1, ok := w32.GetCursorPos()
+			if !ok {
+				panic("Could not get Cursor Pos with win32!")
+			}
+
+			fmt.Printf("Setting x1,y1 to %+d,%+d", x1, y1)
+		}
+
+		fmt.Println("--- Press '3' to start!")
+		if ev.Kind == hook.KeyDown && ev.Keychar == '3' {
+			break
+		}
 	}
 
-	levelsToPass, err := strconv.Atoi(os.Args[5])
+	levelsToPass, err := strconv.Atoi(os.Args[1])
 	if err != nil {
 		panic(err)
 	}
-
-	x1 := w + x0
-	y1 := h + y0
 
 	bounds := image.Rect(x0, y0, x1, y1)
 	img, err := screenshot.CaptureRect(bounds)
@@ -145,4 +158,14 @@ func MoveClick(x, y int, delay time.Duration) {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func RegKbHook() chan hook.Event {
+	keyboardChan := make(chan types.KeyboardEvent, 100)
+
+	if err := keyboard.Install(nil, keyboardChan); err != nil {
+		return err
+	}
+
+	defer keyboard.Uninstall()
 }
