@@ -81,26 +81,38 @@ func main() {
 
 		fmt.Printf("Playing level %d/%d!\n", i, levelsToPass)
 
+		var pouColors = make(map[color.Color]int)
 		var pouColor color.Color = color.Transparent
-		setColor := true
 
-		for y := screenshotBounds.Min.Y; y < height; y += 10 {
-			for x := screenshotBounds.Min.X; x < width; x += 10 {
-
+		// This loop gets all pou colors from current level
+		for y := screenshotBounds.Min.Y; y < height; y += 20 {
+			for x := screenshotBounds.Min.X; x < width; x += 20 {
 				pix := img.At(x, y)
 
 				for _, c := range colors {
-					if !setColor {
-						break
-					}
-
 					if c == pix {
-						pouColor = c
-						setColor = false
+						pouColors[c]++
 					}
 				}
 
-				if !setColor && pouColor == pix {
+			}
+		}
+
+		// This loop sets pouColor (the color to look for - less is better)
+		min := int(^uint(0) >> 1)
+		for k, v := range pouColors {
+			if v < min {
+				min = v
+				pouColor = k
+			}
+		}
+
+		for y := screenshotBounds.Min.Y; y < height; y += 20 {
+			for x := screenshotBounds.Min.X; x < width; x += 20 {
+
+				pix := img.At(x, y)
+
+				if pouColor == pix {
 					MoveClick(x0+x, y0+y, time.Millisecond*60)
 
 					img, err = screenshot.CaptureRect(bounds)
