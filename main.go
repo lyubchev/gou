@@ -41,8 +41,6 @@ var up = w32.INPUT{
 	},
 }
 
-var run = false
-
 func main() {
 	levelsToPass, err := strconv.Atoi(os.Args[1])
 	if err != nil {
@@ -59,7 +57,6 @@ func main() {
 	fmt.Println(" Move Cursor to the BOTTOM RIGHT corner of the playground then press '2' to set BOTTOM RIGHT cords! ")
 	fmt.Println()
 	fmt.Println(" Press '3' to start the bot! ")
-	fmt.Println(" Press '4' to stop the bot! ")
 	type cords struct {
 		x0 int
 		y0 int
@@ -93,9 +90,9 @@ func main() {
 		}
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_3 {
 			Play(levelsToPass, c.x0, c.y0, c.x1, c.y1)
+			close(kbC)
 		}
 	}
-
 }
 
 func MoveClick(x, y int, delay time.Duration) {
@@ -115,17 +112,14 @@ func MoveClick(x, y int, delay time.Duration) {
 }
 
 func RegKbHook() (chan types.KeyboardEvent, error) {
-	keyboardChan := make(chan types.KeyboardEvent, 11200)
+	keyboardChan := make(chan types.KeyboardEvent, 100)
 
 	err := keyboard.Install(nil, keyboardChan)
 	if err != nil {
 		return nil, err
 	}
 
-	defer func() {
-		fmt.Println("here")
-		_ = keyboard.Uninstall()
-	}()
+	defer keyboard.Uninstall()
 
 	return keyboardChan, nil
 }
@@ -175,9 +169,6 @@ func Play(levelsToPass, x0, y0, x1, y1 int) {
 		for y := screenshotBounds.Min.Y; y < height; y += 20 {
 			for x := screenshotBounds.Min.X; x < width; x += 20 {
 
-				if !run {
-					return
-				}
 				pix := img.At(x, y)
 
 				if pouColor == pix {
