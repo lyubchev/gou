@@ -41,7 +41,14 @@ var up = w32.INPUT{
 	},
 }
 
+var run = true
+
 func main() {
+	levelsToPass, err := strconv.Atoi(os.Args[1])
+	if err != nil {
+		panic(err)
+	}
+
 	kbC, err := RegKbHook()
 	if err != nil {
 		panic(err)
@@ -49,38 +56,69 @@ func main() {
 
 	var x0, y0, x1, y1 int
 
+	fmt.Println("- Move Cursor to the TOP LEFT corner of the playground then press '1' to set TOP LEFT cords! -")
+	fmt.Println()
+	fmt.Println("- Move Cursor to the BOTTOM RIGHT corner of the playground then press '2' to set BOTTOM RIGHT cords! -")
+	fmt.Println()
+	fmt.Println("--- Press '3' to start/stop after you set the points! ---")
+
 	for ev := range kbC {
-		fmt.Println("--- Move your mouse cursor to the TOP LEFT corner of the game playground then press '1' to set TOP LEFT cords!")
-		if ev.VKCode == 0x31 {
+		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_1 {
 			x0, y0, ok := w32.GetCursorPos()
 			if !ok {
 				panic("Could not get Cursor Pos with win32!")
 			}
 
-			fmt.Printf("Setting x0,y0 to %+d,%+d", x0, y0)
+			fmt.Printf("Setting x0,y0 to %+d,%+d\n", x0, y0)
 		}
 
-		fmt.Println("--- Move your mouse cursor to the BOTTOM RIGHT corner of the game playground then press '2' to set BOTTOM RIGHT cords!")
-		if ev.VKCode == 0x32 {
+		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_2 {
 			x1, y1, ok := w32.GetCursorPos()
 			if !ok {
 				panic("Could not get Cursor Pos with win32!")
 			}
 
-			fmt.Printf("Setting x1,y1 to %+d,%+d", x1, y1)
+			fmt.Printf("Setting x1,y1 to %+d,%+d\n", x1, y1)
 		}
 
-		fmt.Println("--- Press '3' to start!")
-		if ev.VKCode == 0x33 {
-			break
+		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_Q {
+			Play(run, levelsToPass, x0, y0, x1, y1)
+			run = !run
 		}
 	}
 
-	levelsToPass, err := strconv.Atoi(os.Args[1])
+}
+
+func MoveClick(x, y int, delay time.Duration) {
+	w32.SetCursorPos(x, y)
+
+	err := w32.SendInput([]w32.INPUT{down})
 	if err != nil {
 		panic(err)
 	}
 
+	time.Sleep(delay)
+
+	err = w32.SendInput([]w32.INPUT{up})
+	if err != nil {
+		panic(err)
+	}
+}
+
+func RegKbHook() (chan types.KeyboardEvent, error) {
+	keyboardChan := make(chan types.KeyboardEvent, 100)
+
+	err := keyboard.Install(nil, keyboardChan)
+	if err != nil {
+		return nil, err
+	}
+
+	defer keyboard.Uninstall()
+
+	return keyboardChan, nil
+}
+
+func Play(run bool, levelsToPass, x0, y0, x1, y1 int) {
 	bounds := image.Rect(x0, y0, x1, y1)
 	img, err := screenshot.CaptureRect(bounds)
 	if err != nil {
@@ -92,7 +130,6 @@ func main() {
 	height := screenshotBounds.Max.Y
 
 	for i := 1; i <= levelsToPass; i++ {
-
 		start := time.Now()
 
 		fmt.Printf("Playing level %d/%d!\n", i, levelsToPass)
@@ -126,6 +163,9 @@ func main() {
 		for y := screenshotBounds.Min.Y; y < height; y += 20 {
 			for x := screenshotBounds.Min.X; x < width; x += 20 {
 
+				if !run {
+					return
+				}
 				pix := img.At(x, y)
 
 				if pouColor == pix {
@@ -144,33 +184,4 @@ func main() {
 		fmt.Printf("Level %d passed in %s!\n", i, elapsed)
 	}
 
-	fmt.Println(bounds)
-}
-
-func MoveClick(x, y int, delay time.Duration) {
-	w32.SetCursorPos(x, y)
-
-	err := w32.SendInput([]w32.INPUT{down})
-	if err != nil {
-		panic(err)
-	}
-
-	time.Sleep(delay)
-
-	err = w32.SendInput([]w32.INPUT{up})
-	if err != nil {
-		panic(err)
-	}
-}
-
-func RegKbHook() (chan types.KeyboardEvent, error) {
-	keyboardChan := make(chan types.KeyboardEvent, 100)
-
-	if err := keyboard.Install(nil, keyboardChan); err != nil {
-		return nil, err
-	}
-
-	defer keyboard.Uninstall()
-
-	return keyboardChan, nil
 }
