@@ -41,7 +41,7 @@ var up = w32.INPUT{
 	},
 }
 
-var run = true
+var run = false
 
 func main() {
 	levelsToPass, err := strconv.Atoi(os.Args[1])
@@ -54,13 +54,20 @@ func main() {
 		panic(err)
 	}
 
-	var x0, y0, x1, y1 int
+	fmt.Println(" Move Cursor to the TOP LEFT corner of the playground then press '1' to set TOP LEFT cords! ")
+	fmt.Println()
+	fmt.Println(" Move Cursor to the BOTTOM RIGHT corner of the playground then press '2' to set BOTTOM RIGHT cords! ")
+	fmt.Println()
+	fmt.Println(" Press '3' to start the bot! ")
+	fmt.Println(" Press '4' to stop the bot! ")
+	type cords struct {
+		x0 int
+		y0 int
+		x1 int
+		y1 int
+	}
 
-	fmt.Println("- Move Cursor to the TOP LEFT corner of the playground then press '1' to set TOP LEFT cords! -")
-	fmt.Println()
-	fmt.Println("- Move Cursor to the BOTTOM RIGHT corner of the playground then press '2' to set BOTTOM RIGHT cords! -")
-	fmt.Println()
-	fmt.Println("--- Press '3' to start/stop after you set the points! ---")
+	c := &cords{}
 
 	for ev := range kbC {
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_1 {
@@ -68,6 +75,8 @@ func main() {
 			if !ok {
 				panic("Could not get Cursor Pos with win32!")
 			}
+			c.x0 = x0
+			c.y0 = y0
 
 			fmt.Printf("Setting x0,y0 to %+d,%+d\n", x0, y0)
 		}
@@ -77,13 +86,13 @@ func main() {
 			if !ok {
 				panic("Could not get Cursor Pos with win32!")
 			}
+			c.x1 = x1
+			c.y1 = y1
 
 			fmt.Printf("Setting x1,y1 to %+d,%+d\n", x1, y1)
 		}
-
-		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_Q {
-			Play(run, levelsToPass, x0, y0, x1, y1)
-			run = !run
+		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_3 {
+			Play(levelsToPass, c.x0, c.y0, c.x1, c.y1)
 		}
 	}
 
@@ -106,19 +115,22 @@ func MoveClick(x, y int, delay time.Duration) {
 }
 
 func RegKbHook() (chan types.KeyboardEvent, error) {
-	keyboardChan := make(chan types.KeyboardEvent, 100)
+	keyboardChan := make(chan types.KeyboardEvent, 11200)
 
 	err := keyboard.Install(nil, keyboardChan)
 	if err != nil {
 		return nil, err
 	}
 
-	defer keyboard.Uninstall()
+	defer func() {
+		fmt.Println("here")
+		_ = keyboard.Uninstall()
+	}()
 
 	return keyboardChan, nil
 }
 
-func Play(run bool, levelsToPass, x0, y0, x1, y1 int) {
+func Play(levelsToPass, x0, y0, x1, y1 int) {
 	bounds := image.Rect(x0, y0, x1, y1)
 	img, err := screenshot.CaptureRect(bounds)
 	if err != nil {
@@ -183,5 +195,4 @@ func Play(run bool, levelsToPass, x0, y0, x1, y1 int) {
 		fmt.Println()
 		fmt.Printf("Level %d passed in %s!\n", i, elapsed)
 	}
-
 }
