@@ -110,13 +110,12 @@ func main() {
 
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_4 {
 			qc <- struct{}{}
-			close(kbC)
-
-			err := keyboard.Uninstall()
-			if err != nil {
-				panic(err)
-			}
 		}
+	}
+
+	err = keyboard.Uninstall()
+	if err != nil {
+		panic(err)
 	}
 }
 
@@ -148,6 +147,8 @@ func RegKbHook() (chan types.KeyboardEvent, error) {
 }
 
 func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) {
+	defer close(kbC)
+
 	bounds := image.Rect(x0, y0, x1, y1)
 	img, err := screenshot.CaptureRect(bounds)
 	if err != nil {
@@ -201,10 +202,8 @@ func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, 
 
 		select {
 		case <-termC:
-			close(kbC)
 			return
 		case <-qc:
-			close(kbC)
 			return
 		default:
 			for y := screenshotBounds.Min.Y; y < height; y += 10 {
