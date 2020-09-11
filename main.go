@@ -74,6 +74,7 @@ func main() {
 
 	c := &cords{}
 
+	isRunning := false
 	qc := make(chan struct{})
 	for ev := range kbC {
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_1 {
@@ -99,11 +100,20 @@ func main() {
 		}
 
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_3 {
-			go Play(qc, levelsToPass, c.x0, c.y0, c.x1, c.y1)
+			if !isRunning {
+				go Play(qc, levelsToPass, c.x0, c.y0, c.x1, c.y1)
+				isRunning = true
+			}
 		}
 
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_4 {
 			qc <- struct{}{}
+			close(kbC)
+
+			err := keyboard.Uninstall()
+			if err != nil {
+				panic(err)
+			}
 		}
 	}
 }
@@ -132,8 +142,6 @@ func RegKbHook() (chan types.KeyboardEvent, error) {
 		return nil, err
 	}
 
-	defer keyboard.Uninstall()
-
 	return keyboardChan, nil
 }
 
@@ -150,7 +158,6 @@ func Play(qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) {
 
 	totalLevelsPassed := 1
 	for {
-
 		start := time.Now()
 
 		if levelsToPass == 0 {
@@ -166,8 +173,8 @@ func Play(qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) {
 		var pouColor color.Color = color.Transparent
 
 		// This loop gets all pou colors from current level
-		for y := screenshotBounds.Min.Y; y < height; y += 20 {
-			for x := screenshotBounds.Min.X; x < width; x += 20 {
+		for y := screenshotBounds.Min.Y; y < height; y += 10 {
+			for x := screenshotBounds.Min.X; x < width; x += 10 {
 				pix := img.At(x, y)
 
 				for _, c := range colors {
@@ -175,7 +182,6 @@ func Play(qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) {
 						pouColors[c]++
 					}
 				}
-
 			}
 		}
 
@@ -192,12 +198,12 @@ func Play(qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) {
 		case <-qc:
 			return
 		default:
-			for y := screenshotBounds.Min.Y; y < height; y += 20 {
-				for x := screenshotBounds.Min.X; x < width; x += 20 {
+			for y := screenshotBounds.Min.Y; y < height; y += 10 {
+				for x := screenshotBounds.Min.X; x < width; x += 10 {
 
 					pix := img.At(x, y)
 					if pouColor == pix {
-						MoveClick(x0+x, y0+y, time.Millisecond*60)
+						MoveClick(x0+x, y0+y, time.Millisecond*50)
 
 						img, err = screenshot.CaptureRect(bounds)
 						if err != nil {
