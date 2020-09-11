@@ -17,7 +17,6 @@ import (
 )
 
 // Pou Colors
-
 var colors = []color.Color{
 	color.RGBA{99, 199, 255, 255},
 	color.RGBA{247, 239, 57, 255},
@@ -67,6 +66,7 @@ func main() {
 	fmt.Println(" Press '3' to start the bot! ")
 	fmt.Println()
 	fmt.Println(" Press '4' to stop the bot! ")
+	fmt.Println()
 	type cords struct {
 		x0 int
 		y0 int
