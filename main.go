@@ -86,7 +86,7 @@ func main() {
 			c.x0 = x0
 			c.y0 = y0
 
-			fmt.Printf("Setting x0,y0 to %+d,%+d\n", x0, y0)
+			fmt.Printf("Setting (x0,y0) to %+d,%+d\n", x0, y0)
 		}
 
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_2 {
@@ -97,7 +97,7 @@ func main() {
 			c.x1 = x1
 			c.y1 = y1
 
-			fmt.Printf("Setting x1,y1 to %+d,%+d\n", x1, y1)
+			fmt.Printf("Setting (x1,y1) to %+d,%+d\n", x1, y1)
 		}
 
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_3 {
