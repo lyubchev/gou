@@ -44,7 +44,7 @@ var up = w32.INPUT{
 func main() {
 	levelsToPass, err := strconv.Atoi(os.Args[1])
 	if err != nil {
-		panic(err)
+		fmt.Println("No number for levels to pass provided, the bot will continue playing until stopped!")
 	}
 
 	kbC, err := RegKbHook()
@@ -57,6 +57,8 @@ func main() {
 	fmt.Println(" Move Cursor to the BOTTOM RIGHT corner of the playground then press '2' to set BOTTOM RIGHT cords! ")
 	fmt.Println()
 	fmt.Println(" Press '3' to start the bot! ")
+	fmt.Println()
+	fmt.Println(" Press '4' to stop the bot! ")
 	type cords struct {
 		x0 int
 		y0 int
@@ -66,6 +68,7 @@ func main() {
 
 	c := &cords{}
 
+	qc := make(chan struct{})
 	for ev := range kbC {
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_1 {
 			x0, y0, ok := w32.GetCursorPos()
@@ -88,9 +91,13 @@ func main() {
 
 			fmt.Printf("Setting x1,y1 to %+d,%+d\n", x1, y1)
 		}
+
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_3 {
-			Play(levelsToPass, c.x0, c.y0, c.x1, c.y1)
-			close(kbC)
+			go Play(qc, levelsToPass, c.x0, c.y0, c.x1, c.y1)
+		}
+
+		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_4 {
+			qc <- struct{}{}
 		}
 	}
 }
@@ -124,7 +131,7 @@ func RegKbHook() (chan types.KeyboardEvent, error) {
 	return keyboardChan, nil
 }
 
-func Play(levelsToPass, x0, y0, x1, y1 int) {
+func Play(qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) {
 	bounds := image.Rect(x0, y0, x1, y1)
 	img, err := screenshot.CaptureRect(bounds)
 	if err != nil {
@@ -135,10 +142,19 @@ func Play(levelsToPass, x0, y0, x1, y1 int) {
 	width := screenshotBounds.Max.X
 	height := screenshotBounds.Max.Y
 
-	for i := 1; i <= levelsToPass; i++ {
+	totalLevelsPassed := 0
+	for {
+
 		start := time.Now()
 
-		fmt.Printf("Playing level %d/%d!\n", i, levelsToPass)
+		if levelsToPass == 0 {
+			fmt.Printf("Playing level %d!\n", totalLevelsPassed)
+		} else {
+			fmt.Printf("Playing level %d/%d!\n", totalLevelsPassed, levelsToPass)
+			if totalLevelsPassed == levelsToPass {
+				return
+			}
+		}
 
 		var pouColors = make(map[color.Color]int)
 		var pouColor color.Color = color.Transparent
@@ -166,24 +182,30 @@ func Play(levelsToPass, x0, y0, x1, y1 int) {
 			}
 		}
 
-		for y := screenshotBounds.Min.Y; y < height; y += 20 {
-			for x := screenshotBounds.Min.X; x < width; x += 20 {
+		select {
+		case <-qc:
+			return
+		default:
+			for y := screenshotBounds.Min.Y; y < height; y += 20 {
+				for x := screenshotBounds.Min.X; x < width; x += 20 {
 
-				pix := img.At(x, y)
+					pix := img.At(x, y)
+					if pouColor == pix {
+						MoveClick(x0+x, y0+y, time.Millisecond*60)
 
-				if pouColor == pix {
-					MoveClick(x0+x, y0+y, time.Millisecond*60)
-
-					img, err = screenshot.CaptureRect(bounds)
-					if err != nil {
-						panic(err)
+						img, err = screenshot.CaptureRect(bounds)
+						if err != nil {
+							panic(err)
+						}
 					}
 				}
 			}
+
+			elapsed := time.Since(start)
+			fmt.Println()
+			fmt.Printf("Level %d passed in %s!\n", totalLevelsPassed, elapsed)
 		}
 
-		elapsed := time.Since(start)
-		fmt.Println()
-		fmt.Printf("Level %d passed in %s!\n", i, elapsed)
+		totalLevelsPassed++
 	}
 }
