@@ -25,7 +25,6 @@ var colors = []color.Color{
 	color.RGBA{66, 243, 49, 255},
 	color.RGBA{255, 130, 181, 255},
 	color.RGBA{140, 138, 140, 255},
-	// color.RGBA{255, 255, 255, 255},
 }
 
 var down = w32.INPUT{
@@ -188,7 +187,7 @@ func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, 
 			}
 		}
 
-		// This loop sets pouColor (the color to look for - less is better)
+		// This loop sets pouColor (the color to look for - less occurrences of particular color is better)
 		min := int(^uint(0) >> 1)
 		for k, v := range pouColors {
 			if v < min {
