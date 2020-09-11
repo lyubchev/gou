@@ -102,7 +102,13 @@ func main() {
 
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_3 {
 			if !isRunning {
-				go Play(kbC, qc, levelsToPass, c.x0, c.y0, c.x1, c.y1)
+				go func() {
+					err := Play(kbC, qc, levelsToPass, c.x0, c.y0, c.x1, c.y1)
+					if err != nil {
+						panic(err)
+					}
+				}()
+
 				isRunning = true
 			}
 		}
@@ -145,13 +151,13 @@ func RegKbHook() (chan types.KeyboardEvent, error) {
 	return keyboardChan, nil
 }
 
-func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) {
+func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) error {
 	defer close(kbC)
 
 	bounds := image.Rect(x0, y0, x1, y1)
 	img, err := screenshot.CaptureRect(bounds)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	screenshotBounds := img.Bounds()
@@ -167,7 +173,7 @@ func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, 
 		} else {
 			fmt.Printf("Playing level %d/%d!\n", totalLevelsPassed, levelsToPass)
 			if totalLevelsPassed == levelsToPass {
-				return
+				return nil
 			}
 		}
 
@@ -201,9 +207,9 @@ func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, 
 
 		select {
 		case <-termC:
-			return
+			return nil
 		case <-qc:
-			return
+			return nil
 		default:
 			for y := screenshotBounds.Min.Y; y < height; y += 10 {
 				for x := screenshotBounds.Min.X; x < width; x += 10 {
@@ -217,7 +223,7 @@ func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, 
 
 						img, err = screenshot.CaptureRect(bounds)
 						if err != nil {
-							panic(err)
+							return err
 						}
 					}
 				}
