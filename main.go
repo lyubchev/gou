@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"log"
 	"os"
 	"os/signal"
 	"strconv"
@@ -45,7 +46,7 @@ func main() {
 	var levelsToPass int
 	var err error
 	if len(os.Args) == 1 {
-		fmt.Println("No number for levels to pass provided, the bot will continue playing until stopped!")
+		log.Println("No number for levels to pass provided, the bot will continue playing until stopped!")
 	} else {
 		levelsToPass, err = strconv.Atoi(os.Args[1])
 		if err != nil {
@@ -86,7 +87,7 @@ func main() {
 			c.x0 = x0
 			c.y0 = y0
 
-			fmt.Printf("Setting (x0,y0) to %+d,%+d\n", x0, y0)
+			log.Printf("Setting (x0,y0) to %+d,%+d\n", x0, y0)
 		}
 
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_2 {
@@ -97,7 +98,7 @@ func main() {
 			c.x1 = x1
 			c.y1 = y1
 
-			fmt.Printf("Setting (x1,y1) to %+d,%+d\n", x1, y1)
+			log.Printf("Setting (x1,y1) to %+d,%+d\n", x1, y1)
 		}
 
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_3 {
@@ -169,9 +170,9 @@ func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, 
 		start := time.Now()
 
 		if levelsToPass == 0 {
-			fmt.Printf("Playing level %d!\n", totalLevelsPassed)
+			log.Printf("Playing level %d!\n", totalLevelsPassed)
 		} else {
-			fmt.Printf("Playing level %d/%d!\n", totalLevelsPassed, levelsToPass)
+			log.Printf("Playing level %d/%d!\n", totalLevelsPassed, levelsToPass)
 			if totalLevelsPassed == levelsToPass {
 				return nil
 			}
@@ -231,7 +232,7 @@ func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, 
 
 			elapsed := time.Since(start)
 			fmt.Println()
-			fmt.Printf("Level %d passed in %s!\n", totalLevelsPassed, elapsed)
+			log.Printf("Level %d passed in %s!\n", totalLevelsPassed, elapsed)
 		}
 
 		totalLevelsPassed++
