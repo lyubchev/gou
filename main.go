@@ -42,9 +42,15 @@ var up = w32.INPUT{
 }
 
 func main() {
-	levelsToPass, err := strconv.Atoi(os.Args[1])
-	if err != nil {
+	var levelsToPass int
+	var err error
+	if len(os.Args) == 1 {
 		fmt.Println("No number for levels to pass provided, the bot will continue playing until stopped!")
+	} else {
+		levelsToPass, err = strconv.Atoi(os.Args[1])
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	kbC, err := RegKbHook()
@@ -142,7 +148,7 @@ func Play(qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) {
 	width := screenshotBounds.Max.X
 	height := screenshotBounds.Max.Y
 
-	totalLevelsPassed := 0
+	totalLevelsPassed := 1
 	for {
 
 		start := time.Now()
