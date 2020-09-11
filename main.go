@@ -5,7 +5,9 @@ import (
 	"image"
 	"image/color"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 
 	"github.com/JamesHovious/w32"
@@ -101,7 +103,7 @@ func main() {
 
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_3 {
 			if !isRunning {
-				go Play(qc, levelsToPass, c.x0, c.y0, c.x1, c.y1)
+				go Play(kbC, qc, levelsToPass, c.x0, c.y0, c.x1, c.y1)
 				isRunning = true
 			}
 		}
@@ -145,7 +147,7 @@ func RegKbHook() (chan types.KeyboardEvent, error) {
 	return keyboardChan, nil
 }
 
-func Play(qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) {
+func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) {
 	bounds := image.Rect(x0, y0, x1, y1)
 	img, err := screenshot.CaptureRect(bounds)
 	if err != nil {
@@ -194,8 +196,15 @@ func Play(qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) {
 			}
 		}
 
+		termC := make(chan os.Signal, 100)
+		signal.Notify(termC, syscall.SIGINT, syscall.SIGTERM)
+
 		select {
+		case <-termC:
+			close(kbC)
+			return
 		case <-qc:
+			close(kbC)
 			return
 		default:
 			for y := screenshotBounds.Min.Y; y < height; y += 10 {
