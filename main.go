@@ -211,7 +211,10 @@ func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, 
 
 					pix := img.At(x, y)
 					if pouColor == pix {
-						MoveClick(x0+x, y0+y, time.Millisecond*50)
+						MoveClick(x0+x, y0+y, time.Millisecond*60)
+
+						// a delay for the game to update to a new color
+						time.Sleep(time.Millisecond * 20)
 
 						img, err = screenshot.CaptureRect(bounds)
 						if err != nil {
