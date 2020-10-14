@@ -3,4 +3,4 @@
 
 ### Setup
 
-To setup and run the bot on your Pou account install Bluestacks.
+To setup and run the bot on your Pou account install [Bluestacks](https://www.bluestacks.com/).
