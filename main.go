@@ -42,6 +42,14 @@ var up = w32.INPUT{
 	},
 }
 
+
+type Coords struct {
+    x0 int
+    y0 int
+    x1 int
+    y1 int
+}
+
 func main() {
 	var levelsToPass int
 	var err error
@@ -59,22 +67,16 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println(" Move Cursor to the TOP LEFT corner of the playground then press '1' to set TOP LEFT cords! ")
+	fmt.Println(" Move Cursor to the TOP LEFT corner of the playground then press '1' to set TOP LEFT coordinates! ")
 	fmt.Println()
-	fmt.Println(" Move Cursor to the BOTTOM RIGHT corner of the playground then press '2' to set BOTTOM RIGHT cords! ")
+	fmt.Println(" Move Cursor to the BOTTOM RIGHT corner of the playground then press '2' to set BOTTOM RIGHT coordinates! ")
 	fmt.Println()
 	fmt.Println(" Press '3' to start the bot! ")
 	fmt.Println()
 	fmt.Println(" Press '4' to stop the bot! ")
 	fmt.Println()
-	type cords struct {
-		x0 int
-		y0 int
-		x1 int
-		y1 int
-	}
 
-	c := &cords{}
+	c := &Coords{}
 
 	isRunning := false
 	qc := make(chan struct{})
@@ -104,7 +106,7 @@ func main() {
 		if ev.Message == types.WM_KEYUP && ev.VKCode == types.VK_3 {
 			if !isRunning {
 				go func() {
-					err := Play(kbC, qc, levelsToPass, c.x0, c.y0, c.x1, c.y1)
+					err := Play(kbC, qc, levelsToPass, c)
 					if err != nil {
 						panic(err)
 					}
@@ -152,10 +154,10 @@ func RegKbHook() (chan types.KeyboardEvent, error) {
 	return keyboardChan, nil
 }
 
-func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, x1, y1 int) error {
+func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, c Coords) error {
 	defer close(kbC)
 
-	bounds := image.Rect(x0, y0, x1, y1)
+	bounds := image.Rect(c.x0, c.y0, c.x1, c.y1)
 	img, err := screenshot.CaptureRect(bounds)
 	if err != nil {
 		return err
@@ -217,7 +219,7 @@ func Play(kbC chan types.KeyboardEvent, qc chan struct{}, levelsToPass, x0, y0, 
 
 					pix := img.At(x, y)
 					if pouColor == pix {
-						MoveClick(x0+x, y0+y, time.Millisecond*60)
+						MoveClick(c.x0+x, c.y0+y, time.Millisecond*60)
 
 						// a delay for the game to update to a new color
 						time.Sleep(time.Millisecond * 20)
